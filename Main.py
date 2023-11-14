@@ -1,6 +1,7 @@
 import json
 import SpotifyHandler
 import TidalHandler
+import StateHandler
 
 title = r"""
   _________              __  .__  _____          __           ___________.__    .___      .__    ___________                              _____             
@@ -28,21 +29,31 @@ print("Located the following playlist: ", spotify_playlists.keys())
 tidal_login = TidalHandler.login()
 
 
-for key in spotify_playlists.keys():
-    spotify_playlist = SpotifyHandler.request_tracks(spotify_login, spotify_playlists[key])
+for playlist_name in spotify_playlists.keys():
+    # Check if we've already created this playlist in TIDAL
+    created_playlists = StateHandler.read_created_playlists()
 
-    #How we will keep track of how many songs we need to port over / used to move offset forward. 
-    total_songs = spotify_playlist["total"]
-    #Creating an empty Play List
-    tidal_playlist = TidalHandler.create_playlist(tidal_login,key)
+    if playlist_name not in created_playlists:
+        print(f"Playlist: '{playlist_name}' does not exist within TIDAL, creating now...")
+        spotify_playlist = SpotifyHandler.request_tracks(spotify_login, spotify_playlists[playlist_name])
 
-    offset = 0
+        # How we will keep track of how many songs we need to port over / used to move offset forward. 
+        total_songs = spotify_playlist["total"]
+        # Creating an empty Play List
+        tidal_playlist = TidalHandler.create_playlist(tidal_login,playlist_name)
 
-    while total_songs > 0:
-        TidalHandler.build_playlist(tidal_login, tidal_playlist, spotify_playlist)
-        offset = offset +100
-        total_songs= total_songs - 100
-        spotify_playlist = SpotifyHandler.request_tracks(spotify_login, spotify_playlists[key], offset)
-        if offset > total_songs:
-            break
+        offset = 0
+
+        while total_songs > 0:
+            TidalHandler.build_playlist(tidal_login, tidal_playlist, spotify_playlist)
+            offset = offset +100
+            total_songs= total_songs - 100
+            spotify_playlist = SpotifyHandler.request_tracks(spotify_login, spotify_playlists[playlist_name], offset)
+            if offset > total_songs:
+                break
+        
+        # Update the state file to record the fact that we have created this playlist within TIDAL
+        StateHandler.write_created_playlist(playlist_name)
+    else:
+        print(f"Playlist: '{playlist_name}' already exists. Skipping creation.")
 
