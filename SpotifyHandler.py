@@ -2,7 +2,7 @@ import base64
 import json
 import requests
 
-#Spotify Handler
+# Spotify Handler
 
 
 def login(client_id, client_secret):
@@ -40,21 +40,32 @@ def request_all_playlist(access_token, user_id):
     user_id = user_json["id"]
     """
 
-
     playlists_url = f"https://api.spotify.com/v1/users/{user_id}/playlists"
-    playlists_response = requests.get(playlists_url, headers=access_token)
+    playlists = {}
 
+    limit = 20 # Max is 50 per spotify
+    offset = 0  # Start at the beginning
 
-    playlists_json = playlists_response.json()
+    while True:
+        params = {
+            'limit': limit,
+            'offset': offset
+        }
+        response = requests.get(playlists_url, headers=access_token, params=params)
+        response_json = response.json()
 
-    playlist = {}
-    
+        # Extract playlists from the current page
+        for item in response_json["items"]:
+            playlists[item["name"]] = item["id"]
 
-    for x in range(len(playlists_json["items"])):
-        playlist[playlists_json["items"][x]["name"]] = playlists_json["items"][x]["id"]
+        # Check if there are more playlists to fetch
+        if len(response_json["items"]) < limit:
+            break
 
+        # Update the offset for the next batch
+        offset += limit
 
-    return playlist
+    return playlists
 
 
 
