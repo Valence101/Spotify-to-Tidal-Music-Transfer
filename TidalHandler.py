@@ -1,4 +1,5 @@
 import json
+from urllib import request
 import tidalapi
 from tidalapi import Track
 import time
@@ -14,7 +15,7 @@ def create_playlist(session, playlistname):
     return playlist
 
 def build_playlist(session, tidal_playlist, spotify_playlist):
-    #Takes Spotify Playlist json and turns into a tidal playlist
+    # Takes Spotify Playlist json and turns into a tidal playlist
 
     tidal_tracks = []
     for song in range(len(spotify_playlist["items"])):
@@ -63,7 +64,20 @@ def build_playlist(session, tidal_playlist, spotify_playlist):
     time.sleep(random.randint(1,5))
     print("Waking back up")
 
-    tidal_playlist.add(tidal_tracks)
+    # Splitting tidal_tracks into smaller batches if necessary
+    batch_size = 50  # Example batch size, adjust as needed
+    for i in range(0, len(tidal_tracks), batch_size):
+        batch = tidal_tracks[i:i + batch_size]
+        try:
+            tidal_playlist.add(batch)
+            print(f"Added batch of tracks {i}-{i + batch_size}")
+            # Trying to avoid api rate limit exceptions
+            print("Sleeping for up to 5 secs")
+            time.sleep(random.randint(1,5))
+        except request.exceptions.HTTPError as e:
+            print(f"HTTP error occurred: {e}")
+            print(f"Failed to add batch to tidal playlist - batch: {batch}")
+            
 
 
 
