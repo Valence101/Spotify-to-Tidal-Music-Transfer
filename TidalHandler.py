@@ -8,8 +8,8 @@ import random
 
 def create_playlist(session, playlistname):
     #Creates a tidal playlist
-    descrption="Playlist ported over Via Almethis' FREE Music Transfer on Github."
-    playlist = session.user.create_playlist(playlistname, descrption)
+    description="Playlist ported over Via Almethis' FREE Music Transfer on Github."
+    playlist = session.user.create_playlist(playlistname, description)
 
     return playlist
 
@@ -21,12 +21,16 @@ def build_playlist(session, tidal_playlist, spotify_playlist):
 
         tracks = spotify_playlist["items"][song]["track"]
 
-        
+        # Check if tracks is not None
+        if tracks is not None:
+            name = tracks['name']
+            artist = tracks['artists'][0]['name']
+            query = name + " " + artist
 
-        name= tracks['name']
-        artist = tracks['artists'][0]['name']
-        #album = tracks['album']['name']
-        query = name + " " + artist
+            # Rest of your code...
+        else:
+            print(f"Skipping a track at position {song} due to missing track info.")
+
         try:
             results = session.search(query=query, models=[Track])
         except AttributeError as e:
