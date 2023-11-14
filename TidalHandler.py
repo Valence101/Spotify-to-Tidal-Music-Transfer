@@ -46,7 +46,7 @@ def build_playlist(session, tidal_playlist, spotify_playlist):
         found = False
 
         for result in results["tracks"]:
-            if result.name == name and result.artist.name == artist:
+            if result.name.strip().lower() == name.strip().lower() and result.artist.name.strip().lower() == artist.strip().lower():
                 # This is the matching Tidal track
                 tidal_track = result
                 tidal_tracks.append(tidal_track.id)
@@ -54,7 +54,7 @@ def build_playlist(session, tidal_playlist, spotify_playlist):
                 break
 
         if found == False:
-            print(" I was unable to locate: " , name , " by ", artist)
+            print(f' I was unable to locate: {name} by {artist}')
             #To Do add a album search method to see if we can locate it
 
     
